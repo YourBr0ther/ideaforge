@@ -38,7 +38,7 @@ spec:
               mountPath: /claude-config
       containers:
         - name: ideaforge
-          image: 10.0.2.180:30500/ideaforge:latest
+          image: yourbr0ther/ideaforge:latest
           ports:
             - containerPort: 3000
               name: health

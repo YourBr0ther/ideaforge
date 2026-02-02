@@ -30,7 +30,7 @@ RUN mkdir -p /workspace /logs /root/.claude /config
 # Bot application
 WORKDIR /app
 COPY bot/package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 COPY bot/ .
 
 # Health check
