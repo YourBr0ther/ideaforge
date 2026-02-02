@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ideaforge-runner
+  namespace: ideaforge
+  labels:
+    app: ideaforge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ideaforge
+  template:
+    metadata:
+      labels:
+        app: ideaforge
+    spec:
+      # Prefer scheduling on k3s-node4 as specified in the design
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - k3s-node4
+      initContainers:
+        # Restore Claude Code credentials on startup
+        - name: restore-auth
+          image: busybox
+          command: ['sh', '-c', 'cp -r /config/claude-auth-backup/. /claude-config/ 2>/dev/null || true']
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: claude-auth
+              mountPath: /claude-config
+      containers:
+        - name: ideaforge
+          image: 10.0.2.180:30500/ideaforge:latest
+          ports:
+            - containerPort: 3000
+              name: health
+          envFrom:
+            - secretRef:
+                name: ideaforge-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: claude-auth
+              mountPath: /root/.claude
+            - name: config
+              mountPath: /config
+            - name: logs
+              mountPath: /logs
+            - name: claude-code-config
+              mountPath: /root/.claude/settings.json
+              subPath: claude-code-config.json
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: ideaforge-workspace
+        - name: claude-auth
+          persistentVolumeClaim:
+            claimName: ideaforge-config
+        - name: config
+          persistentVolumeClaim:
+            claimName: ideaforge-config
+        - name: logs
+          persistentVolumeClaim:
+            claimName: ideaforge-logs
+        - name: claude-code-config
+          configMap:
+            name: ideaforge-claude-config

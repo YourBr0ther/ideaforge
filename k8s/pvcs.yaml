@@ -1,0 +1,42 @@
+---
+# Workspace PVC - where Claude Code builds projects
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ideaforge-workspace
+  namespace: ideaforge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 20Gi
+---
+# Config PVC - Claude Code auth credentials + config backups
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ideaforge-config
+  namespace: ideaforge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+# Logs PVC - build logs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ideaforge-logs
+  namespace: ideaforge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi
