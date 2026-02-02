@@ -26,16 +26,6 @@ spec:
                     operator: In
                     values:
                       - k3s-node4
-      initContainers:
-        # Restore Claude Code credentials on startup
-        - name: restore-auth
-          image: busybox
-          command: ['sh', '-c', 'cp -r /config/claude-auth-backup/. /claude-config/ 2>/dev/null || true']
-          volumeMounts:
-            - name: config
-              mountPath: /config
-            - name: claude-auth
-              mountPath: /claude-config
       containers:
         - name: ideaforge
           image: yourbr0ther/ideaforge:latest
@@ -67,8 +57,9 @@ spec:
           volumeMounts:
             - name: workspace
               mountPath: /workspace
-            - name: claude-auth
+            - name: config
               mountPath: /root/.claude
+              subPath: claude-auth
             - name: config
               mountPath: /config
             - name: logs
@@ -80,9 +71,6 @@ spec:
         - name: workspace
           persistentVolumeClaim:
             claimName: ideaforge-workspace
-        - name: claude-auth
-          persistentVolumeClaim:
-            claimName: ideaforge-config
         - name: config
           persistentVolumeClaim:
             claimName: ideaforge-config
