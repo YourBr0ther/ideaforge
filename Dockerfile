@@ -24,8 +24,12 @@ RUN npm install -g \
     @modelcontextprotocol/server-filesystem \
     @upstash/context7-mcp
 
+# Create non-root user for running Claude Code (it refuses --dangerously-skip-permissions as root)
+RUN useradd -m -u 1001 -s /bin/bash forge
+
 # Create directories
-RUN mkdir -p /workspace /logs /root/.claude /config
+RUN mkdir -p /workspace /logs /root/.claude /config /home/forge/.claude \
+    && chown -R forge:forge /workspace /logs /home/forge
 
 # Bot application
 WORKDIR /app

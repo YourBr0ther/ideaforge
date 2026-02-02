@@ -8,9 +8,33 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require('discord.js');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const buildQueue = require('./queue');
+
+// Non-root user for running Claude Code (refuses --dangerously-skip-permissions as root)
+const FORGE_UID = 1001;
+const FORGE_GID = 1001;
+const FORGE_HOME = '/home/forge';
+
+function syncCredentialsToForgeUser() {
+  const srcDir = '/root/.claude';
+  const dstDir = path.join(FORGE_HOME, '.claude');
+
+  fs.mkdirSync(dstDir, { recursive: true });
+
+  const files = ['.credentials.json', 'settings.json', 'settings.local.json'];
+  for (const file of files) {
+    const src = path.join(srcDir, file);
+    const dst = path.join(dstDir, file);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dst);
+      fs.chownSync(dst, FORGE_UID, FORGE_GID);
+    }
+  }
+  fs.chownSync(dstDir, FORGE_UID, FORGE_GID);
+}
 
 // GitHub account configuration
 const GITHUB_ACCOUNTS = {
@@ -192,9 +216,11 @@ module.exports = {
     const logFile = `${logDir}/${timestamp}-${slug}.log`;
     const projectDir = `/workspace/${accountKey}/${slug}`;
 
-    // Ensure directories exist
+    // Ensure directories exist and sync credentials to non-root user
     fs.mkdirSync(`/workspace/${accountKey}`, { recursive: true });
+    fs.chownSync(`/workspace/${accountKey}`, FORGE_UID, FORGE_GID);
     fs.mkdirSync(logDir, { recursive: true });
+    syncCredentialsToForgeUser();
 
     const prompt = `
 # Project: ${appName}
@@ -258,8 +284,12 @@ SUMMARY: [2-3 sentence summary of what was built and key features]
         '--dangerously-skip-permissions'
       ], {
         cwd: `/workspace/${accountKey}`,
+        uid: FORGE_UID,
+        gid: FORGE_GID,
         env: {
           ...process.env,
+          HOME: FORGE_HOME,
+          USER: 'forge',
           GITHUB_TOKEN: account.token,
           GH_TOKEN: account.token
         },
