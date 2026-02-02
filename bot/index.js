@@ -69,8 +69,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     else if (interaction.isButton()) {
       if (interaction.customId.startsWith('forge_account_')) {
         await forgeCommand.handleButton(interaction);
-      } else if (interaction.customId === 'auth_enter_code') {
-        await authCommand.handleCodeButton(interaction);
       } else if (interaction.customId.startsWith('forge_retry_')) {
         await forgeCommand.handleRetryButton(interaction);
       } else if (interaction.customId === 'forge_view_logs') {
@@ -81,8 +79,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     else if (interaction.isModalSubmit()) {
       if (interaction.customId.startsWith('forge_modal_')) {
         await forgeCommand.handleModal(interaction);
-      } else if (interaction.customId === 'auth_code_modal') {
-        await authCommand.handleCodeModal(interaction);
       }
     }
   } catch (error) {
