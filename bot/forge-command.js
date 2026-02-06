@@ -398,6 +398,7 @@ SUMMARY: [2-3 sentence summary of what was built and key features]
       // 30 minute timeout
       setTimeout(() => {
         proc.kill('SIGTERM');
+        logStream.end();
         reject(new Error('Build timed out after 30 minutes'));
       }, 30 * 60 * 1000);
     });
