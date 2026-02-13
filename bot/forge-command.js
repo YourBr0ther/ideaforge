@@ -396,11 +396,16 @@ SUMMARY: [2-3 sentence summary of what was built and key features]
       });
 
       // 30 minute timeout
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         proc.kill('SIGTERM');
         logStream.end();
         reject(new Error('Build timed out after 30 minutes'));
       }, 30 * 60 * 1000);
+
+      // Clear timeout if process completes normally
+      proc.on('close', () => {
+        clearTimeout(timeoutId);
+      });
     });
   },
 
