@@ -401,11 +401,6 @@ SUMMARY: [2-3 sentence summary of what was built and key features]
         logStream.end();
         reject(new Error('Build timed out after 30 minutes'));
       }, 30 * 60 * 1000);
-
-      // Clear timeout if process completes normally
-      proc.on('close', () => {
-        clearTimeout(timeoutId);
-      });
     });
   },
 
