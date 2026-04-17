@@ -362,7 +362,7 @@ SUMMARY: [2-3 sentence summary of what was built and key features]
 
         if (authError) {
           buildQueue.setLastBuild(buildConfig, { error: 'Auth expired', failed: true });
-          handleAuthError(interaction);
+          handleAuthError(interaction).catch(() => {});
           reject(new Error('Claude Code authentication expired'));
           return;
         }
